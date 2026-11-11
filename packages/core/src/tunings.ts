@@ -1,0 +1,2 @@
+export const tuningPresets={equal:{en:'Equal temperament',el:'Ίσος συγκερασμός',offsets:[0,0,0,0,0,0,0,0,0,0,0,0]},quarter:{en:'Quarter-tone demonstration',el:'Επίδειξη τεταρτοτονίων',offsets:[0,-50,0,-50,0,0,-50,0,-50,0,-50,0]},ussak:{en:'Uşşak illustrative (not authoritative)',el:'Ουσάκ ενδεικτικό (όχι αυθεντικό)',offsets:[0,0,-35,0,0,0,0,0,0,-25,0,0]}} as const;
+export function tuningOffset(midi:number,offsets:readonly number[]){return offsets[((midi%12)+12)%12]??0}

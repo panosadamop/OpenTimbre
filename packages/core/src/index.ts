@@ -1,0 +1,9 @@
+export type Sample={id:string;name:string;path:string;root:number;rootCents:number;lo:number;hi:number;velocityMin:number;velocityMax:number;roundRobin:number;articulation:string};
+export type Instrument={schemaVersion:1;id:string;name:string;description:string;license:string;samples:Sample[]};
+export type NoteEvent={midi:number;start:number;duration:number;velocity:number;cents:number;track?:number};
+export type Song={title:string;bpm:number;notes:NoteEvent[]};
+export const midiName=(n:number)=>['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][((n%12)+12)%12]+(Math.floor(n/12)-1);
+export function selectSample(instrument:Instrument,note:number,velocity:number,articulation='sustain',round=0){const candidates=instrument.samples.filter(s=>note>=s.lo&&note<=s.hi&&velocity>=s.velocityMin&&velocity<=s.velocityMax&&s.articulation===articulation);if(!candidates.length)return null;const roots=[...candidates].sort((a,b)=>Math.abs(a.root-note)-Math.abs(b.root-note));const closest=roots.filter(s=>Math.abs(s.root-note)===Math.abs(roots[0].root-note));return closest[round%closest.length];}
+export function playbackRate(midi:number,cents:number,sample:Sample){return 2**((midi-sample.root+(cents-sample.rootCents)/100)/12)}
+export const demoSong:Song={title:'Microtonal sketch',bpm:100,notes:[60,62,63,65,67,65,63,62,60].map((midi,i)=>({midi,start:i*.48,duration:.4,velocity:95,cents:i===2?-35:0}))};
+export function validateInstrument(x:unknown):x is Instrument{if(!x||typeof x!=='object')return false;const v=x as Partial<Instrument>;return v.schemaVersion===1&&typeof v.id==='string'&&typeof v.name==='string'&&typeof v.license==='string'&&Array.isArray(v.samples)&&v.samples.every(s=>typeof s.path==='string'&&!s.path.startsWith('/')&&!s.path.includes('..')&&Number.isFinite(s.root)&&Number.isFinite(s.lo)&&Number.isFinite(s.hi)&&s.lo<=s.hi&&s.velocityMin>=0&&s.velocityMax<=127)}

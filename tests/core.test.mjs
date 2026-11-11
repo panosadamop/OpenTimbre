@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+test('fixture manifest and WAV headers are valid',()=>{const dir='instruments/demo-synthetic',m=JSON.parse(fs.readFileSync(dir+'/instrument.json'));assert.equal(m.samples.length,3);for(const s of m.samples){const b=fs.readFileSync(dir+'/'+s.path);assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.toString('ascii',8,12),'WAVE');assert.ok(b.length>100)}});
