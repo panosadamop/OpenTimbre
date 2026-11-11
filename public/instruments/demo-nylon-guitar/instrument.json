@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-nylon-guitar",
+  "name": "Synthetic nylon-guitar (procedural demo)",
+  "description": "Generated approximation; NOT a recording or trained neural model",
+  "license": "CC0-1.0",
+  "samples": [
+    {
+      "id": "nylon-guitar-48",
+      "name": "nylon-guitar-48.wav",
+      "path": "nylon-guitar-48.wav",
+      "root": 48,
+      "rootCents": 0,
+      "lo": 46,
+      "hi": 49,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "nylon-guitar-52",
+      "name": "nylon-guitar-52.wav",
+      "path": "nylon-guitar-52.wav",
+      "root": 52,
+      "rootCents": 0,
+      "lo": 50,
+      "hi": 53,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "nylon-guitar-56",
+      "name": "nylon-guitar-56.wav",
+      "path": "nylon-guitar-56.wav",
+      "root": 56,
+      "rootCents": 0,
+      "lo": 54,
+      "hi": 57,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "nylon-guitar-60",
+      "name": "nylon-guitar-60.wav",
+      "path": "nylon-guitar-60.wav",
+      "root": 60,
+      "rootCents": 0,
+      "lo": 58,
+      "hi": 61,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "nylon-guitar-64",
+      "name": "nylon-guitar-64.wav",
+      "path": "nylon-guitar-64.wav",
+      "root": 64,
+      "rootCents": 0,
+      "lo": 62,
+      "hi": 65,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "nylon-guitar-68",
+      "name": "nylon-guitar-68.wav",
+      "path": "nylon-guitar-68.wav",
+      "root": 68,
+      "rootCents": 0,
+      "lo": 66,
+      "hi": 69,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "nylon-guitar-72",
+      "name": "nylon-guitar-72.wav",
+      "path": "nylon-guitar-72.wav",
+      "root": 72,
+      "rootCents": 0,
+      "lo": 70,
+      "hi": 73,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    }
+  ]
+}

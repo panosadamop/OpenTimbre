@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-flute",
+  "name": "Synthetic flute (procedural demo)",
+  "description": "Generated approximation; NOT a recording or trained neural model",
+  "license": "CC0-1.0",
+  "samples": [
+    {
+      "id": "flute-48",
+      "name": "flute-48.wav",
+      "path": "flute-48.wav",
+      "root": 48,
+      "rootCents": 0,
+      "lo": 46,
+      "hi": 49,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "flute-52",
+      "name": "flute-52.wav",
+      "path": "flute-52.wav",
+      "root": 52,
+      "rootCents": 0,
+      "lo": 50,
+      "hi": 53,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "flute-56",
+      "name": "flute-56.wav",
+      "path": "flute-56.wav",
+      "root": 56,
+      "rootCents": 0,
+      "lo": 54,
+      "hi": 57,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "flute-60",
+      "name": "flute-60.wav",
+      "path": "flute-60.wav",
+      "root": 60,
+      "rootCents": 0,
+      "lo": 58,
+      "hi": 61,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "flute-64",
+      "name": "flute-64.wav",
+      "path": "flute-64.wav",
+      "root": 64,
+      "rootCents": 0,
+      "lo": 62,
+      "hi": 65,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "flute-68",
+      "name": "flute-68.wav",
+      "path": "flute-68.wav",
+      "root": 68,
+      "rootCents": 0,
+      "lo": 66,
+      "hi": 69,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "flute-72",
+      "name": "flute-72.wav",
+      "path": "flute-72.wav",
+      "root": 72,
+      "rootCents": 0,
+      "lo": 70,
+      "hi": 73,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    }
+  ]
+}
