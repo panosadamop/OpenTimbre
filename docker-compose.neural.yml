@@ -1,0 +1,15 @@
+services:
+  studio:
+    build: .
+    ports: ["8080:80"]
+  synthesis:
+    build:
+      context: ./services/ai
+      dockerfile: Dockerfile.neural
+    ports: ["8000:8000"]
+    environment:
+      CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+    volumes:
+      - synthesis-output:/app/output
+volumes:
+  synthesis-output:

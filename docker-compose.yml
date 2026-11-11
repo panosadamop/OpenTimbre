@@ -1,0 +1,18 @@
+services:
+  studio:
+    build: .
+    ports:
+      - "8080:80"
+  synthesis:
+    build: ./services/ai
+    ports:
+      - "8000:8000"
+    environment:
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:8080
+      # Optional: configure a separately deployed trained model:
+      # - NEURAL_MODEL_ENDPOINT=http://host.docker.internal:9000/generate
+      # - NEURAL_MODEL_VERSION=your-model-version
+    volumes:
+      - synthesis-output:/app/output
+volumes:
+  synthesis-output:
