@@ -138,3 +138,38 @@
 
 ## Neural Instruments / Εκπαίδευση (v0.5)
 Στην οθόνη **Πηγές & Σύνθεση → Neural Instruments** επιλέξτε όργανο, WAV, πραγματική MIDI νότα και δυναμική (1–127). Το πεδίο «Δήλωση δικαιωμάτων» απαιτεί επιβεβαίωση ότι έχετε άδεια χρήσης. Πατήστε «Προσθήκη ηχογράφησης» για κάθε δείγμα και στη συνέχεια «Εκπαίδευση μοντέλου». Χρειάζονται τουλάχιστον δύο WAV (16/32-bit PCM, 8–96 kHz, έως 15 s και 5 MB ανά αρχείο). Το backend εκπαιδεύει μικρό νευρωνικό δίκτυο που προβλέπει 24 αρμονικές. Δεν είναι πλήρης neural audio codec ούτε εγγυάται ρεαλιστικό ηχόχρωμα. Στο Instrument Generator επιλέξτε **Local Neural** και το model ID. Για καλύτερα αποτελέσματα χρησιμοποιήστε πολλά καθαρά δείγματα από διαφορετικές νότες και δυναμικές. Τα uploads αποθηκεύονται προσωρινά στη μνήμη, ενώ τα μοντέλα στον Docker volume. Εκτός Docker: `pip install -r services/ai/requirements-neural.txt`. Εκκίνηση: `docker compose -f docker-compose.neural.yml up --build`.
+
+
+---
+
+# OpenTimbre — Σύνδεση και εγγραφή
+
+## Ενεργοποίηση
+1. Αντιγράψτε το `.env.example` σε `.env`.
+2. Ορίστε ισχυρό τυχαίο `AUTH_SECRET` (τουλάχιστον 32 χαρακτήρες). Μην το αποθηκεύσετε στο Git.
+3. Εκκινήστε `docker compose -f docker-compose.neural.yml up --build`.
+4. Ανοίξτε `http://localhost:8080` και επιλέξτε «Δημιουργία λογαριασμού».
+
+## Πεδία
+- **Name / Όνομα:** εμφανιζόμενο όνομα κατά την εγγραφή.
+- **Email:** μοναδική διεύθυνση λογαριασμού.
+- **Password / Κωδικός:** τουλάχιστον 12 χαρακτήρες κατά την εγγραφή.
+- **Sign in / Σύνδεση:** σύνδεση με email και κωδικό.
+- **Register / Εγγραφή:** δημιουργία νέου λογαριασμού.
+- **Continue with GitHub:** εξωτερική σύνδεση OAuth.
+- **Google:** επίσημο κουμπί Google Identity Services, εφόσον έχει ρυθμιστεί.
+- **Sign out / Αποσύνδεση:** διαγραφή session cookie.
+
+## Google
+Δημιουργήστε OAuth Web Client στο Google Cloud. Προσθέστε το domain σας στα Authorized JavaScript origins. Ορίστε το ίδιο client ID στις `GOOGLE_CLIENT_ID` και `VITE_GOOGLE_CLIENT_ID` (η δεύτερη μεταβλητή ενσωματώνεται κατά το frontend build). Το backend επαληθεύει τα Google ID tokens.
+
+## GitHub
+Δημιουργήστε OAuth App και ορίστε callback URL `https://YOUR_DOMAIN/api/auth/github/callback` (για localhost: `http://localhost:8080/api/auth/github/callback`). Συμπληρώστε `GITHUB_CLIENT_ID` και `GITHUB_CLIENT_SECRET`.
+
+## Ασφάλεια και περιορισμοί
+Για HTTPS ορίστε `AUTH_COOKIE_SECURE=true`. Η βάση SQLite αποθηκεύεται στον persistent Docker volume. Οι κωδικοί αποθηκεύονται με Argon2. Τα sessions είναι HttpOnly cookies. Οι υπάρχουσες αποθηκεύσεις του Studio παραμένουν **στον browser και δεν απομονώνονται ανά λογαριασμό**: μην χρησιμοποιείτε κοινό browser μεταξύ χρηστών για ευαίσθητα projects. Πριν από δημόσια παραγωγική λειτουργία απαιτούνται rate limiting, password reset, email verification, CSRF protection για state-changing routes και per-user authorization για datasets/models/jobs. Μην εκθέτετε το API port 8000 δημόσια.
+
+## Cloud Workspace (v0.7)
+Από το αριστερό μενού επιλέξτε **Cloud Workspace**. Απαιτείται σύνδεση χρήστη. Το πεδίο **Τίτλος** ορίζει το όνομα της σύνθεσης ή της ηχογράφησης. Με **Αποθήκευση τρέχουσας σύνθεσης** αποθηκεύονται οι νότες και οι παράμετροι της σύνθεσης στον προσωπικό λογαριασμό. Στη λίστα επιλέξτε **Φόρτωση** για να την επαναφέρετε στον Song Composer.
+
+Για ηχογράφηση επιλέξτε **Όργανο** (ούτι, σάζι ή άλλο), τη **MIDI νότα** (0–127), ένα αρχείο **WAV** και πατήστε **Μεταφόρτωση WAV**. Μέγιστο μέγεθος 40 MB ανά αρχείο. Τα αρχεία είναι ιδιωτικά και μπορείτε να τα κατεβάσετε ή να τα διαγράψετε. Τα samples που έχετε εισαγάγει τοπικά στον browser **δεν συγχρονίζονται αυτόματα**. Δεν υπάρχει ακόμη κοινή χρήση, συγχρονισμός μοντέλων ή εξαγωγή ολόκληρης βιβλιοθήκης.

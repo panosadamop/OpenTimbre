@@ -53,3 +53,18 @@ Run `docker compose up --build` for Studio at http://localhost:8080 and synthesi
 
 ## Neural Instruments v0.5
 Run `docker compose -f docker-compose.neural.yml up --build`. See `docs/NEURAL-INSTRUMENTS.md`. This is a trainable harmonic neural baseline, not a pretrained realistic oud/saz model.
+
+
+## Authentication (v0.6 development)
+Email/password registration and login (Argon2 + SQLite + HttpOnly session cookie), Google ID-token login, and GitHub OAuth. See `docs/AUTHENTICATION-EN.md` and `docs/AUTHENTICATION-EL.md`. Copy `.env.example` to `.env` and configure `AUTH_SECRET` before launching. **Not production-ready**: see security limitations in the manuals.
+
+## Cloud Workspace v0.7
+Authenticated users can save/load compositions and upload/download private WAV recordings from the **Cloud Workspace** menu. Backend metadata is stored in SQLite and recordings in per-user directories on the persistent synthesis output volume. See `docs/CLOUD-WORKSPACE-EL.md` and `docs/CLOUD-WORKSPACE-EN.md` for endpoints and security limitations. Existing neural training/models are not yet user-isolated; do not deploy this development version publicly.
+
+## v0.8 — Cloud instrument packs, superadmin and demo instruments
+
+See [Greek instructions](docs/RELEASE-v0.8-EL.md) and [English instructions](docs/RELEASE-v0.8-EN.md). Run `npm run fixtures` to generate nine procedural demo instruments. Configure a superadmin through the interactive backend CLI; **no preset password is shipped**. Public catalogue publishes only opted-in instrument metadata; recordings remain private. Neural training and jobs still need per-user isolation before public deployment.
+
+## v0.9 Workspace → AI Training
+
+See `docs/LIBRARY-TRAINING-EL.md` and `docs/LIBRARY-TRAINING-EN.md`. Training uses persistent, user-owned WAV recordings linked to instrument libraries; generated models are stored per account.

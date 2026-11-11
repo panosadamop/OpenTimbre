@@ -1,1 +1,16 @@
 import fs from 'node:fs';import path from 'node:path';const dir='instruments/demo-synthetic';fs.mkdirSync(dir,{recursive:true});const samples=[];for(const root of [48,60,72]){const sr=44100,len=sr*3,buf=Buffer.alloc(44+len*2);buf.write('RIFF',0);buf.writeUInt32LE(36+len*2,4);buf.write('WAVEfmt ',8);buf.writeUInt32LE(16,16);buf.writeUInt16LE(1,20);buf.writeUInt16LE(1,22);buf.writeUInt32LE(sr,24);buf.writeUInt32LE(sr*2,28);buf.writeUInt16LE(2,32);buf.writeUInt16LE(16,34);buf.write('data',36);buf.writeUInt32LE(len*2,40);const freq=440*2**((root-69)/12);for(let i=0;i<len;i++){const t=i/sr,envelope=(1-Math.exp(-t*90))*Math.exp(-t*1.7),wave=(Math.sin(2*Math.PI*freq*t)+.23*Math.sin(2*Math.PI*freq*2*t)+.1*Math.sin(2*Math.PI*freq*3*t))*.55*envelope;buf.writeInt16LE(Math.round(wave*32767),44+i*2)}const name=`synthetic-${root}.wav`;fs.writeFileSync(path.join(dir,name),buf);samples.push({id:`s${root}`,name,path:name,root,rootCents:0,lo:root-6,hi:root+5,velocityMin:0,velocityMax:127,roundRobin:0,articulation:'sustain'})}fs.writeFileSync(path.join(dir,'instrument.json'),JSON.stringify({schemaVersion:1,id:'synthetic-demo',name:'Synthetic demo (NOT an oud or saz)',description:'Generated harmonic tones, no natural instrument samples',license:'CC0-1.0',samples},null,2));fs.mkdirSync('public/instruments/demo-synthetic',{recursive:true});for(const name of fs.readdirSync(dir))fs.copyFileSync(path.join(dir,name),path.join('public/instruments/demo-synthetic',name));console.log('Generated demo WAV samples and copied them to Vite public assets')
+
+// Additional clearly labelled procedural demos; these are NOT sampled real instruments.
+for (const [kind,harmonics,decay] of [
+ ['oud',[1,.54,.30,.17,.09],2.0],['saz',[1,.75,.45,.23,.12],2.5],
+ ['nylon-guitar',[1,.36,.17,.08],1.9],['piano',[1,.55,.24,.12,.06],1.15],
+ ['kalimba',[1,.22,.1,.05],1.05],['flute',[1,.12,.05],.35],
+ ['tambouras',[1,.65,.37,.16],2.3],['tzouras',[1,.8,.5,.3],2.7]
+]){
+ const d=path.join('public/instruments','demo-'+kind);fs.mkdirSync(d,{recursive:true});const list=[];
+ for(let root=48;root<=72;root+=4){const sr=22050,len=sr*2,buf=Buffer.alloc(44+len*2);buf.write('RIFF',0);buf.writeUInt32LE(36+len*2,4);buf.write('WAVEfmt ',8);buf.writeUInt32LE(16,16);buf.writeUInt16LE(1,20);buf.writeUInt16LE(1,22);buf.writeUInt32LE(sr,24);buf.writeUInt32LE(sr*2,28);buf.writeUInt16LE(2,32);buf.writeUInt16LE(16,34);buf.write('data',36);buf.writeUInt32LE(len*2,40);const freq=440*2**((root-69)/12);
+ for(let i=0;i<len;i++){const t=i/sr,attack=1-Math.exp(-t*(kind==='flute'?12:120)),env=attack*Math.exp(-t*decay),v=harmonics.reduce((acc,h,j)=>acc+h*Math.sin(2*Math.PI*freq*(j+1)*t),0)/harmonics.reduce((a,b)=>a+b,0)*env*.75;buf.writeInt16LE(Math.round(Math.max(-1,Math.min(1,v))*32767),44+i*2)}
+ const name=`${kind}-${root}.wav`;fs.writeFileSync(path.join(d,name),buf);list.push({id:`${kind}-${root}`,name,path:name,root,rootCents:0,lo:Math.max(0,root-2),hi:Math.min(127,root+1),velocityMin:0,velocityMax:127,roundRobin:0,articulation:'sustain'});
+ }
+ fs.writeFileSync(path.join(d,'instrument.json'),JSON.stringify({schemaVersion:1,id:'demo-'+kind,name:'Synthetic '+kind+' (procedural demo)',description:'Generated approximation; NOT a recording or trained neural model',license:'CC0-1.0',samples:list},null,2));
+}

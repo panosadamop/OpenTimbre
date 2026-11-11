@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-oud",
+  "name": "Synthetic oud (procedural demo)",
+  "description": "Generated approximation; NOT a recording or trained neural model",
+  "license": "CC0-1.0",
+  "samples": [
+    {
+      "id": "oud-48",
+      "name": "oud-48.wav",
+      "path": "oud-48.wav",
+      "root": 48,
+      "rootCents": 0,
+      "lo": 46,
+      "hi": 49,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "oud-52",
+      "name": "oud-52.wav",
+      "path": "oud-52.wav",
+      "root": 52,
+      "rootCents": 0,
+      "lo": 50,
+      "hi": 53,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "oud-56",
+      "name": "oud-56.wav",
+      "path": "oud-56.wav",
+      "root": 56,
+      "rootCents": 0,
+      "lo": 54,
+      "hi": 57,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "oud-60",
+      "name": "oud-60.wav",
+      "path": "oud-60.wav",
+      "root": 60,
+      "rootCents": 0,
+      "lo": 58,
+      "hi": 61,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "oud-64",
+      "name": "oud-64.wav",
+      "path": "oud-64.wav",
+      "root": 64,
+      "rootCents": 0,
+      "lo": 62,
+      "hi": 65,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "oud-68",
+      "name": "oud-68.wav",
+      "path": "oud-68.wav",
+      "root": 68,
+      "rootCents": 0,
+      "lo": 66,
+      "hi": 69,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "oud-72",
+      "name": "oud-72.wav",
+      "path": "oud-72.wav",
+      "root": 72,
+      "rootCents": 0,
+      "lo": 70,
+      "hi": 73,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-saz",
+  "name": "Synthetic saz (procedural demo)",
+  "description": "Generated approximation; NOT a recording or trained neural model",
+  "license": "CC0-1.0",
+  "samples": [
+    {
+      "id": "saz-48",
+      "name": "saz-48.wav",
+      "path": "saz-48.wav",
+      "root": 48,
+      "rootCents": 0,
+      "lo": 46,
+      "hi": 49,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "saz-52",
+      "name": "saz-52.wav",
+      "path": "saz-52.wav",
+      "root": 52,
+      "rootCents": 0,
+      "lo": 50,
+      "hi": 53,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "saz-56",
+      "name": "saz-56.wav",
+      "path": "saz-56.wav",
+      "root": 56,
+      "rootCents": 0,
+      "lo": 54,
+      "hi": 57,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "saz-60",
+      "name": "saz-60.wav",
+      "path": "saz-60.wav",
+      "root": 60,
+      "rootCents": 0,
+      "lo": 58,
+      "hi": 61,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "saz-64",
+      "name": "saz-64.wav",
+      "path": "saz-64.wav",
+      "root": 64,
+      "rootCents": 0,
+      "lo": 62,
+      "hi": 65,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "saz-68",
+      "name": "saz-68.wav",
+      "path": "saz-68.wav",
+      "root": 68,
+      "rootCents": 0,
+      "lo": 66,
+      "hi": 69,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    },
+    {
+      "id": "saz-72",
+      "name": "saz-72.wav",
+      "path": "saz-72.wav",
+      "root": 72,
+      "rootCents": 0,
+      "lo": 70,
+      "hi": 73,
+      "velocityMin": 0,
+      "velocityMax": 127,
+      "roundRobin": 0,
+      "articulation": "sustain"
+    }
+  ]
+}
