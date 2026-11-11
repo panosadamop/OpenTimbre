@@ -1,10 +1,11 @@
 node_modules/
 dist/
-*.log
-.DS_Store
-
+.venv/
 .env
 .env.*
 !.env.example
-*.sqlite3
-*.sqlite3-*
+local-data/
+__pycache__/
+.pytest_cache/
+*.pyc
+.DS_Store
