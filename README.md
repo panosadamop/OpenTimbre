@@ -68,3 +68,11 @@ See [Greek instructions](docs/RELEASE-v0.8-EL.md) and [English instructions](doc
 ## v0.9 Workspace → AI Training
 
 See `docs/LIBRARY-TRAINING-EL.md` and `docs/LIBRARY-TRAINING-EN.md`. Training uses persistent, user-owned WAV recordings linked to instrument libraries; generated models are stored per account.
+
+## Cross-platform local development / Τοπική ανάπτυξη
+
+Use `scripts/dev.ps1 setup` on Windows PowerShell or `./scripts/dev.sh setup` on macOS/Linux, then run `backend` and `frontend` in separate terminals. See [English guide](docs/LOCAL-DEVELOPMENT-EN.md) / [Ελληνικός οδηγός](docs/LOCAL-DEVELOPMENT-EL.md).
+
+## Recording analysis / Ανάλυση ηχογραφήσεων
+
+Authenticated API `POST /api/v1/recordings/analyze` inspects PCM WAV pitch and recording levels. See [EN](docs/AUDIO-ANALYSIS-EN.md) / [EL](docs/AUDIO-ANALYSIS-EL.md). This is a heuristic analysis API, not a trained audio restoration model or a new Studio screen.

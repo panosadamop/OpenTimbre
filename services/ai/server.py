@@ -159,3 +159,16 @@ async def train_library(body:TrainLibrary,request:__import__('fastapi').Request)
         return {'id':model_id,**result}
     except (ValueError,OSError) as exc:raise HTTPException(422,str(exc))
     except ImportError:raise HTTPException(503,'PyTorch unavailable')
+
+@app.post('/api/v1/recordings/analyze')
+async def analyze_recording(request: __import__('fastapi').Request, file: UploadFile = File(...)):
+    """Authenticated WAV inspection: pitch estimate, level, clipping and quality warnings."""
+    workspace_owner(request)
+    if not file.filename or not file.filename.lower().endswith('.wav'):
+        raise HTTPException(415,'Upload a PCM WAV file')
+    content=await file.read(40_000_001)
+    try:
+        from audio_analysis import analyze_wav
+        return analyze_wav(content)
+    except ValueError as exc:
+        raise HTTPException(422,str(exc)) from exc
