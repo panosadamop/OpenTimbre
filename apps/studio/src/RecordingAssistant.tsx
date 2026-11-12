@@ -1,0 +1,39 @@
+import React,{useEffect,useRef,useState} from 'react';
+
+type Analysis={estimated_frequency_hz?:number|null;estimated_midi?:number|null;deviation_cents?:number|null;pitch_confidence?:number;duration_seconds?:number;sample_rate?:number;channels?:number;warnings?:string[]};
+type Library={id:string;title:string;metadata:{instrument?:string}};
+const api='/api/v1';
+async function jsonResponse(r:Response){const j=await r.json();if(!r.ok)throw Error(typeof j.detail==='string'?j.detail:JSON.stringify(j.detail||j));return j;}
+function Waveform({file}:{file:File}){
+ const canvas=useRef<HTMLCanvasElement>(null);
+ useEffect(()=>{let active=true;const context=new AudioContext();file.arrayBuffer().then(b=>context.decodeAudioData(b)).then(audio=>{
+  if(!active||!canvas.current)return;const c=canvas.current,ctx=c.getContext('2d');if(!ctx)return;
+  const width=c.width,height=c.height,data=audio.getChannelData(0),bucket=Math.max(1,Math.ceil(data.length/width));ctx.clearRect(0,0,width,height);ctx.fillStyle='#0b2030';ctx.fillRect(0,0,width,height);ctx.strokeStyle='#50d9b6';ctx.beginPath();
+  for(let x=0;x<width;x++){let lo=1,hi=-1;for(let i=x*bucket;i<Math.min((x+1)*bucket,data.length);i++){lo=Math.min(lo,data[i]);hi=Math.max(hi,data[i]);}if(lo>hi){lo=0;hi=0;}ctx.moveTo(x,(1-hi)*height/2);ctx.lineTo(x,(1-lo)*height/2);}ctx.stroke();
+ }).catch(()=>{}).finally(()=>void context.close());return()=>{active=false;void context.close().catch(()=>{});};},[file]);
+ return <canvas ref={canvas} width={1000} height={180} style={{width:'100%',height:180,borderRadius:8}} role="img" aria-label="Audio waveform"/>;
+}
+export default function RecordingAssistant({lang,onOpenTraining}:{lang:'el'|'en';onOpenTraining:()=>void}){
+ const el=lang==='el';const [file,setFile]=useState<File|null>(null),[analysis,setAnalysis]=useState<Analysis|null>(null),[libraries,setLibraries]=useState<Library[]>([]),[libraryId,setLibraryId]=useState('');
+ const [title,setTitle]=useState(''),[instrument,setInstrument]=useState('oud'),[midi,setMidi]=useState(60),[cents,setCents]=useState(0),[velocity,setVelocity]=useState(90),[articulation,setArticulation]=useState('sustain'),[rights,setRights]=useState('Private - all rights reserved');
+ const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[savedId,setSavedId]=useState('');
+ async function refresh(){try{const d=await jsonResponse(await fetch(`${api}/workspace/items?kind=instrument`));setLibraries(d.items||[])}catch(e){setMessage(String(e));}}
+ useEffect(()=>{void refresh()},[]);
+ function choose(f:File|undefined){if(!f)return;setFile(f);setTitle(f.name.replace(/\.wav$/i,''));setAnalysis(null);setSavedId('');setMessage('');}
+ async function analyze(){if(!file)return;setBusy(true);setMessage('');try{const form=new FormData();form.append('file',file);const d:Analysis=await jsonResponse(await fetch(`${api}/recordings/analyze`,{method:'POST',body:form}));setAnalysis(d);if(d.estimated_midi!=null)setMidi(d.estimated_midi);if(d.deviation_cents!=null)setCents(Math.round(d.deviation_cents*100)/100);}catch(e){setMessage(String(e))}finally{setBusy(false)}}
+ async function save(){if(!file)return;setBusy(true);setMessage('');try{
+  let id=savedId;
+  if(!id){const form=new FormData();form.append('file',file);form.append('title',title);form.append('instrument',instrument);form.append('midi',String(midi));form.append('rights',rights);const d=await jsonResponse(await fetch(`${api}/workspace/recordings`,{method:'POST',body:form}));id=d.id;setSavedId(id);}
+  await jsonResponse(await fetch(`${api}/workspace/recordings/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,instrument,midi,cents,velocity,articulation,rights})}));
+  if(libraryId)await jsonResponse(await fetch(`${api}/workspace/libraries/${libraryId}/recordings`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recording_id:id,velocity})}));
+  setMessage(el?'Αποθηκεύτηκε στην προσωπική βιβλιοθήκη.':'Saved to your private library.');
+ }catch(e){setMessage(String(e))}finally{setBusy(false)}}
+ return <section className="panel"><div className="sectiontitle"><h3>{el?'AI Βοηθός Ηχογράφησης':'AI Recording Assistant'}</h3><span>WAV → ANALYZE → LIBRARY</span></div>
+ <p>{el?'Ανάλυσε μία ηχογράφηση, διόρθωσε τη νότα και τα μικροδιαστήματα και αποθήκευσέ τη στη βιβλιοθήκη σου.':'Analyze a recording, correct its note and microtonal offset, and save it to your library.'}</p>
+ <label className="upload">{el?'Επιλογή WAV (έως 40 MB)':'Choose WAV (up to 40 MB)'}<input type="file" accept=".wav,audio/wav" onChange={e=>choose(e.target.files?.[0])}/></label>
+ {file&&<><p><strong>{file.name}</strong> · {(file.size/1048576).toFixed(2)} MB</p><Waveform file={file}/><audio controls src={URL.createObjectURL(file)} style={{width:'100%'}} onLoadedMetadata={e=>{const url=(e.target as HTMLAudioElement).src;setTimeout(()=>URL.revokeObjectURL(url),60000)}}/><div className="source-actions"><button disabled={busy||file.size>40*1024*1024} className="primary" onClick={()=>void analyze()}>{busy?'…':el?'Ανάλυση ήχου':'Analyze audio'}</button></div></>}
+ {analysis&&<div className="panel"><h4>{el?'Αποτελέσματα ανάλυσης':'Analysis results'}</h4><p>{el?'Συχνότητα':'Frequency'}: {analysis.estimated_frequency_hz?.toFixed(2)??'—'} Hz · MIDI: {analysis.estimated_midi??'—'} · {el?'Απόκλιση':'Deviation'}: {analysis.deviation_cents?.toFixed(2)??'—'} cents</p><p>{el?'Διάρκεια':'Duration'}: {analysis.duration_seconds?.toFixed(2)??'—'} s · {analysis.sample_rate??'—'} Hz · {el?'Εμπιστοσύνη':'Confidence'}: {analysis.pitch_confidence??'—'}</p>{!!analysis.warnings?.length&&<p role="alert">{analysis.warnings.join(' · ')}</p>}<p className="hint">{el?'Η εκτίμηση νότας μπορεί να είναι λανθασμένη σε πολυφωνικές ή θορυβώδεις ηχογραφήσεις.':'Pitch estimation can be inaccurate for polyphonic or noisy recordings.'}</p></div>}
+ {file&&<div className="importgrid"><div><label>{el?'Τίτλος':'Title'}<input value={title} onChange={e=>setTitle(e.target.value)}/></label><label>{el?'Όργανο':'Instrument'}<select value={instrument} onChange={e=>{setInstrument(e.target.value);setLibraryId('')}}><option value="oud">Oud</option><option value="saz">Saz</option><option value="other">Other</option></select></label><label>MIDI<input type="number" min="0" max="127" value={midi} onChange={e=>setMidi(+e.target.value)}/></label></div><div><label>{el?'Μικροδιαστήματα (cents)':'Microtonal offset (cents)'}<input type="number" step="0.01" min="-1200" max="1200" value={cents} onChange={e=>setCents(+e.target.value)}/></label><label>Velocity<input type="number" min="1" max="127" value={velocity} onChange={e=>setVelocity(+e.target.value)}/></label><label>Articulation<input value={articulation} onChange={e=>setArticulation(e.target.value)}/></label></div><div><label>{el?'Δικαιώματα':'Rights'}<input value={rights} onChange={e=>setRights(e.target.value)}/></label><label>{el?'Προσωπική βιβλιοθήκη':'Personal library'}<select value={libraryId} onChange={e=>setLibraryId(e.target.value)}><option value="">{el?'Μόνο στο Workspace':'Workspace only'}</option>{libraries.filter(l=>l.metadata.instrument===instrument).map(l=><option key={l.id} value={l.id}>{l.title}</option>)}</select></label><button onClick={()=>void refresh()}>{el?'Ανανέωση βιβλιοθηκών':'Refresh libraries'}</button></div></div>}
+ {file&&<div className="source-actions"><button className="primary" disabled={busy||!title.trim()||!rights.trim()||file.size>40*1024*1024} onClick={()=>void save()}>{el?'Αποθήκευση στη βιβλιοθήκη':'Save to library'}</button><button onClick={onOpenTraining}>{el?'Μετάβαση στο Neural Training':'Go to Neural Training'}</button></div>}
+ <p role="status">{message}</p><p className="hint">{el?'Για εκπαίδευση απαιτούνται τουλάχιστον δύο συνδεδεμένες WAV ηχογραφήσεις ούτι ή σαζιού.':'Training requires at least two linked oud or saz WAV recordings.'}</p></section>;
+}
