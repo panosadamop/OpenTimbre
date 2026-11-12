@@ -149,3 +149,35 @@ def unlink_recording(library_id:str,recording_id:str,request:Request):
         if fetch(db,uid,library_id)['kind']!='instrument':raise HTTPException(422,'Not a library')
         db.execute('DELETE FROM library_recordings WHERE owner=? AND library_id=? AND recording_id=?',(uid,library_id,recording_id));db.commit()
     return Response(status_code=204)
+
+
+class RecordingMetadata(BaseModel):
+    title: str = Field(min_length=1,max_length=160)
+    instrument: str
+    midi: int = Field(ge=0,le=127)
+    cents: float = Field(default=0,ge=-1200,le=1200)
+    velocity: int = Field(default=90,ge=1,le=127)
+    articulation: str = Field(default='sustain',max_length=60)
+    rights: str = Field(min_length=1,max_length=250)
+
+@router.patch('/recordings/{iid}')
+def update_recording(iid:str,request:Request,body:RecordingMetadata):
+    uid=owner(request)
+    if body.instrument not in ('oud','saz','other'):
+        raise HTTPException(422,'Invalid instrument')
+    with conn() as db:
+        old=fetch(db,uid,iid)
+        if old['kind']!='recording':raise HTTPException(422,'Not a recording')
+        linked=db.execute('SELECT library_id FROM library_recordings WHERE owner=? AND recording_id=?',(uid,iid)).fetchall()
+        for link in linked:
+            library=fetch(db,uid,link['library_id'])
+            if json.loads(library['metadata']).get('instrument')!=body.instrument:
+                raise HTTPException(422,'Cannot change instrument while linked to a different instrument library')
+        meta=json.loads(old['metadata'])
+        meta.update(body.model_dump(exclude={'title','velocity'}))
+        db.execute('UPDATE items SET title=?,metadata=?,updated=? WHERE id=? AND owner=?',
+                   (body.title,json.dumps(meta,ensure_ascii=False),int(time.time()),iid,uid))
+        db.execute('UPDATE library_recordings SET velocity=? WHERE owner=? AND recording_id=?',
+                   (body.velocity,uid,iid))
+        db.commit()
+        return present(fetch(db,uid,iid))
