@@ -7,7 +7,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from auth import router as auth_router, current as current_user
 from fastapi import Request
@@ -31,28 +31,48 @@ JOBS: dict[str,dict] = {}
 MODEL_DIR=ROOT / "models"
 MODEL_DIR.mkdir(exist_ok=True)
 TRAINING: dict[str,list] = {}
+class AutomationPoint(BaseModel):
+    time: float = Field(ge=0,le=1)
+    value: float
+
 class Request(BaseModel):
     instrument: Literal["oud","saz"]
     midi: int = Field(ge=24,le=96)
     velocity: int = Field(default=90,ge=1,le=127)
     duration: float = Field(default=2.0,ge=0.15,le=8)
-    articulation: Literal["sustain","tremolo","muted"] = "sustain"
+    articulation: Literal["sustain","tremolo","muted","staccato","legato","pluck"] = "sustain"
+    cents: float = Field(default=0,ge=-1200,le=1200)
     seed: int = Field(default=42,ge=0,le=2147483647)
     engine: Literal["dsp","neural","local-neural"] = "dsp"
     rights: str = Field(default="User-generated synthetic audio")
+    pitch_curve: list[AutomationPoint] = Field(default_factory=list,max_length=32)
+    dynamics_curve: list[AutomationPoint] = Field(default_factory=list,max_length=32)
+    @model_validator(mode='after')
+    def validate_automation(self):
+        for point in self.pitch_curve:
+            if not -1200 <= point.value <= 1200: raise ValueError('Pitch bend must be within ±1200 cents')
+        for point in self.dynamics_curve:
+            if not 0 <= point.value <= 2: raise ValueError('Dynamics must be between 0 and 2')
+        return self
     model_id: str = Field(default="",pattern=r"^[a-zA-Z0-9_-]*$",max_length=100)
 
 def dsp_wav(r: Request) -> bytes:
     rate=24000; n=int(rate*r.duration); t=np.arange(n,dtype=np.float64)/rate
-    rng=np.random.default_rng(r.seed); f=440*2**((r.midi-69)/12)
+    from neural import interpolate_curve
+    normalized=t/r.duration
+    bend=interpolate_curve([(p.time,p.value) for p in r.pitch_curve],normalized,0)
+    dynamic=interpolate_curve([(p.time,p.value) for p in r.dynamics_curve],normalized,1)
+    f=440*2**((r.midi-69+(r.cents+bend)/100)/12)
+    phase=2*np.pi*np.cumsum(f)/rate
+    rng=np.random.default_rng(r.seed)
     weights=([1,.5,.28,.14,.07] if r.instrument=="oud" else [1,.68,.39,.23,.12,.07])
     y=np.zeros(n,dtype=np.float64)
     for i,w in enumerate(weights,1):
-        y+=w*np.sin(2*np.pi*f*i*t+rng.uniform(-.03,.03))*np.exp(-t*(1.5+i*.27))
+        y+=w*np.sin(phase*i+rng.uniform(-.03,.03))*np.exp(-t*(1.5+i*.27))
     attack=np.minimum(1,t*180)
     if r.articulation=="muted": y*=np.exp(-t*12)
     if r.articulation=="tremolo": y*=.55+.45*np.maximum(0,np.sin(2*np.pi*9*t))
-    y*=attack*np.minimum(1,np.maximum(0,(r.duration-t)*25))*r.velocity/127
+    y*=attack*np.minimum(1,np.maximum(0,(r.duration-t)*25))*r.velocity/127*dynamic
     y=y/(max(1,float(np.max(np.abs(y)))))*.78
     with io.BytesIO() as out:
         with wave.open(out,"wb") as w:
@@ -69,7 +89,7 @@ async def run_job(jid: str,r:Request,uid:int):
             from neural import render
             model_path=MODEL_DIR / str(uid) / r.model_id
             if not r.model_id or not (model_path/"weights.pt").exists(): raise ValueError("Train and select a local model first")
-            wav=await asyncio.to_thread(render,model_path,r.midi,r.velocity,r.duration,r.articulation,r.seed)
+            wav=await asyncio.to_thread(render,model_path,r.midi,r.velocity,r.duration,r.articulation,r.seed,cents=r.cents,pitch_curve=[(p.time,p.value) for p in r.pitch_curve],dynamics_curve=[(p.time,p.value) for p in r.dynamics_curve])
         else:
             endpoint=os.getenv("NEURAL_MODEL_ENDPOINT","")
             if not endpoint: raise ValueError("No trained neural model configured. Set NEURAL_MODEL_ENDPOINT to a trusted WAV-producing inference service.")
@@ -144,11 +164,11 @@ async def train_library(body:TrainLibrary,request:__import__('fastapi').Request)
         for row in rows:
             meta=json.loads(row['metadata'])
             if not row['filename']:raise HTTPException(422,'Missing recording file')
-            records.append((int(meta['midi']),int(row['velocity']),(WORKSPACE_ROOT/str(uid)/row['filename']).read_bytes()))
+            records.append({'midi':int(meta['midi']),'velocity':int(meta.get('velocity',row['velocity'])),'cents':float(meta.get('cents',0)),'articulation':meta.get('articulation','sustain'),'raw':(WORKSPACE_ROOT/str(uid)/row['filename']).read_bytes()})
     from neural import decode_wav,features,train
     try:
-        for midi,velocity,raw in records:
-            audio,rate=decode_wav(raw);features(audio,rate,midi)
+        for record in records:
+            audio,rate=decode_wav(record['raw']);features(audio,rate,record['midi'],record['cents'])
         model_id=instrument+'-'+uuid.uuid4().hex[:12]
         path=MODEL_DIR/str(uid)/model_id
         result=await asyncio.to_thread(train,records,path,body.epochs)
