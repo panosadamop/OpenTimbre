@@ -1,4 +1,5 @@
-"""Create/promote a superadmin securely: ADMIN_EMAIL=... python create_superadmin.py"""
+"""Bootstrap or recover a superadmin from the command line: ADMIN_EMAIL=... python create_superadmin.py
+Day-to-day user and role management lives in the Administration tab (see docs/USER-MANAGEMENT-EN.md)."""
 import os,sys,getpass,time
 from auth import connect,ph
 email=os.getenv('ADMIN_EMAIL','').strip().lower()

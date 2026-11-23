@@ -25,7 +25,7 @@ async def require_login(request:Request,call_next):
     if path.startswith('/api/') and not path.startswith('/api/auth/') and not current_user(request):
         return JSONResponse({'detail':'Authentication required'},status_code=401)
     return await call_next(request)
-app.add_middleware(CORSMiddleware, allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:8080").split(","), allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
+app.add_middleware(CORSMiddleware, allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:8080").split(","), allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Content-Type"])
 ROOT = Path(os.getenv("OUTPUT_DIR", Path(__file__).parent / "output")); ROOT.mkdir(parents=True, exist_ok=True)
 JOBS: dict[str,dict] = {}
 MODEL_DIR=ROOT / "models"
@@ -110,7 +110,7 @@ def capabilities():
 
 @app.post('/api/v1/synthesis/jobs',status_code=202)
 async def submit(r:Request,request:__import__('fastapi').Request):
-    uid=workspace_owner(request)
+    uid=workspace_owner(request,'synthesis.use')
     if r.engine=="local-neural" and not (MODEL_DIR/str(uid)/r.model_id/"weights.pt").exists():
         raise HTTPException(422,"Select a trained local model")
     if r.engine=="neural" and not os.getenv("NEURAL_MODEL_ENDPOINT"):
@@ -120,19 +120,19 @@ async def submit(r:Request,request:__import__('fastapi').Request):
 
 @app.get('/api/v1/synthesis/jobs/{jid}')
 def status(jid:str,request:__import__("fastapi").Request):
-    if jid not in JOBS or JOBS[jid]["owner"]!=workspace_owner(request):raise HTTPException(404,"Unknown job")
+    if jid not in JOBS or JOBS[jid]["owner"]!=workspace_owner(request,'synthesis.use'):raise HTTPException(404,"Unknown job")
     return JOBS[jid]
 
 @app.get('/api/v1/synthesis/jobs/{jid}/audio')
 def audio(jid:str,request:__import__("fastapi").Request):
-    if jid not in JOBS or JOBS[jid]["owner"]!=workspace_owner(request):raise HTTPException(404,"Unknown job")
+    if jid not in JOBS or JOBS[jid]["owner"]!=workspace_owner(request,'synthesis.use'):raise HTTPException(404,"Unknown job")
     if JOBS[jid]['status']!='completed':raise HTTPException(409,"Audio not ready")
     return Response((ROOT/f"{jid}.wav").read_bytes(),media_type="audio/wav",headers={"Content-Disposition":f'attachment; filename="opentimbre-{jid}.wav"'})
 
 
 @app.get('/api/v1/neural/models')
 def list_models(request:__import__('fastapi').Request):
-    uid=workspace_owner(request)
+    uid=workspace_owner(request,'synthesis.use')
     result=[]
     for path in (MODEL_DIR/str(uid)).glob('*/metadata.json'):
         try: result.append({'id':path.parent.name,**json.loads(path.read_text())})
@@ -141,7 +141,7 @@ def list_models(request:__import__('fastapi').Request):
 
 @app.get('/api/v1/neural/datasets')
 def dataset_counts(request:__import__('fastapi').Request):
-    uid=workspace_owner(request)
+    uid=workspace_owner(request,'neural.train')
     with workspace_conn() as db:
         rows=db.execute('SELECT library_id,COUNT(*) AS count FROM library_recordings WHERE owner=? GROUP BY library_id',(uid,)).fetchall()
     return {'libraries':{r['library_id']:r['count'] for r in rows},'note':'Persistent private workspace recordings'}
@@ -152,7 +152,7 @@ class TrainLibrary(BaseModel):
 
 @app.post('/api/v1/neural/train-library')
 async def train_library(body:TrainLibrary,request:__import__('fastapi').Request):
-    uid=workspace_owner(request)
+    uid=workspace_owner(request,'neural.train')
     with workspace_conn() as db:
         library=workspace_fetch(db,uid,body.library_id)
         if library['kind']!='instrument':raise HTTPException(422,'Not an instrument library')
@@ -183,7 +183,7 @@ async def train_library(body:TrainLibrary,request:__import__('fastapi').Request)
 @app.post('/api/v1/recordings/analyze')
 async def analyze_recording(request: __import__('fastapi').Request, file: UploadFile = File(...)):
     """Authenticated WAV inspection: pitch estimate, level, clipping and quality warnings."""
-    workspace_owner(request)
+    workspace_owner(request,'recordings.analyze')
     if not file.filename or not file.filename.lower().endswith('.wav'):
         raise HTTPException(415,'Upload a PCM WAV file')
     content=await file.read(40_000_001)

@@ -76,3 +76,7 @@ Use `scripts/dev.ps1 setup` on Windows PowerShell or `./scripts/dev.sh setup` on
 ## Recording analysis / Ανάλυση ηχογραφήσεων
 
 Authenticated API `POST /api/v1/recordings/analyze` inspects PCM WAV pitch and recording levels. See [EN](docs/AUDIO-ANALYSIS-EN.md) / [EL](docs/AUDIO-ANALYSIS-EL.md). This is a heuristic analysis API, not a trained audio restoration model or a new Studio screen.
+
+## User & role management / Διαχείριση χρηστών & ρόλων
+
+The **Administration** tab manages users (create, edit, disable, reset password, sign out everywhere, delete), custom roles with fine-grained permissions, and an activity log. Permissions are enforced by the API. See [EN](docs/USER-MANAGEMENT-EN.md) / [EL](docs/USER-MANAGEMENT-EL.md).

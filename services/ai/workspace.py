@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, Request, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
-from auth import current
+from auth import require
 
 router=APIRouter(prefix='/api/v1/workspace',tags=['Workspace'])
 ROOT=Path(os.getenv('WORKSPACE_ROOT',str(Path(__file__).parent/'output'/'workspaces'))).resolve()
@@ -21,10 +21,24 @@ def conn():
     db.execute('CREATE TABLE IF NOT EXISTS trained_models (id TEXT PRIMARY KEY, owner INTEGER NOT NULL, library_id TEXT NOT NULL, instrument TEXT NOT NULL, metadata TEXT NOT NULL, created INTEGER NOT NULL)')
     db.commit();return db
 
-def owner(req):
-    user=current(req)
-    if not user:raise HTTPException(401,'Authentication required')
-    return int(user['id'])
+def owner(req,*perms):
+    """Current user id; requires workspace.use unless other permissions are given."""
+    return int(require(req,*(perms or ('workspace.use',)))['id'])
+
+def check_publish(req,metadata):
+    if isinstance(metadata,dict) and metadata.get('visibility')=='public':
+        require(req,'catalogue.publish')
+
+def purge_owner(uid):
+    """Delete every workspace item, link, model record and stored file belonging to `uid`."""
+    import shutil
+    with conn() as db:
+        n=db.execute('SELECT COUNT(*) FROM items WHERE owner=?',(uid,)).fetchone()[0]
+        for table in ('library_recordings','trained_models','items'):
+            db.execute(f'DELETE FROM {table} WHERE owner=?',(uid,))
+        db.commit()
+    shutil.rmtree(ROOT/str(int(uid)),ignore_errors=True)
+    return n
 
 def fetch(db,uid,item_id):
     row=db.execute('SELECT * FROM items WHERE id=? AND owner=?',(item_id,uid)).fetchone()
@@ -49,7 +63,7 @@ def list_items(request:Request,kind:str|None=None):
 
 @router.post('/items',status_code=201)
 def create_item(request:Request,item:Item):
-    uid=owner(request);now=int(time.time());iid=uuid.uuid4().hex
+    uid=owner(request);check_publish(request,item.metadata);now=int(time.time());iid=uuid.uuid4().hex
     payload=json.dumps(item.metadata,ensure_ascii=False)
     if len(payload)>1_000_000:raise HTTPException(413,'Metadata too large')
     with conn() as db:
@@ -59,7 +73,7 @@ def create_item(request:Request,item:Item):
 
 @router.put('/items/{iid}')
 def update_item(iid:str,request:Request,item:Item):
-    uid=owner(request);payload=json.dumps(item.metadata,ensure_ascii=False)
+    uid=owner(request);check_publish(request,item.metadata);payload=json.dumps(item.metadata,ensure_ascii=False)
     if len(payload)>1_000_000:raise HTTPException(413,'Metadata too large')
     with conn() as db:
         old=fetch(db,uid,iid)
