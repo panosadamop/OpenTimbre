@@ -6,19 +6,21 @@ services:
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     ports:
       - "8080:80"
+    depends_on:
+      - synthesis
   synthesis:
     build:
-      context: .
-      args:
-        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}/services/ai
+      context: ./services/ai
     ports:
       - "127.0.0.1:8000:8000"
+    env_file:
+      - .env
     environment:
       - CORS_ORIGINS=http://localhost:5173,http://localhost:8080
       # Optional: configure a separately deployed trained model:
       # - NEURAL_MODEL_ENDPOINT=http://host.docker.internal:9000/generate
       # - NEURAL_MODEL_VERSION=your-model-version
     volumes:
-      - synthesis-output:/app/output
+      - synthesis-data:/data
 volumes:
-  synthesis-output:
+  synthesis-data:
