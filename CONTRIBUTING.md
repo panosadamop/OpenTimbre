@@ -49,7 +49,6 @@ packages/core      instrument model, sample selection, tuning (no React)
 packages/sfz       SFZ export
 services/ai/       FastAPI backend: auth, roles, cloud workspace, synthesis, analysis, neural training
 functions/api/     Cloudflare Pages Function proxying /api to the backend
-worker/            Cloudflare Workers entry + shared /api proxy (wrangler.jsonc)
 instruments/       synthetic demo instrument (instrument.json + WAVs)
 docs/              specifications, guides and EN/EL manuals
 tests/             frontend/core tests (node --test)

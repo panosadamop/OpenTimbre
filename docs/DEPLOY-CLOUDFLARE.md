@@ -4,13 +4,13 @@ OpenTimbre has two parts:
 
 | Part | What it is | Where it runs |
 |---|---|---|
-| **Studio** | React app built to `dist/` | Cloudflare (Workers static assets or Pages) |
+| **Studio** | React app built to `dist/` | Cloudflare Pages |
 | **API** | FastAPI in `services/ai` (auth, roles, cloud workspace, synthesis, analysis, training) with SQLite and files on disk | **A server you control**: Cloudflare cannot run Python + SQLite |
 
-Cloudflare serves the Studio and forwards every `/api/*` request to your API (`worker/proxy.js`). The browser only ever talks to one origin, so session cookies and GitHub login work without CORS.
+Cloudflare Pages serves the Studio and its Pages Function (`functions/api/[[path]].js`) forwards every `/api/*` request to your API. The browser only ever talks to one origin, so session cookies and GitHub login work without CORS.
 
 ```
-browser ──► https://opentimbre.<you>.workers.dev ──┬─ /*      → dist/ (Studio)
+browser ──► https://opentimbre.pages.dev ───────────┬─ /*      → dist/ (Studio)
                                                     └─ /api/* → BACKEND_URL (FastAPI)
 ```
 
@@ -61,30 +61,53 @@ docker exec -it opentimbre-api python create_superadmin.py
 
 Check that the API responds: `curl https://api.example.com/api/auth/me` should return `401`.
 
-## 2. Deploy the Studio on Cloudflare
+## 2. Deploy the Studio on Cloudflare Pages
 
-### Option A: Workers (the dashboard's default "Import a repository" flow)
+1. In the Cloudflare dashboard: **Workers & Pages → Create → Pages → Connect to Git**. (If the screen offers "Import a repository" for Workers, use the **"Looking to deploy Pages? Get started"** link instead.)
+2. Pick the `OpenTimbre` repository and set:
 
-1. **Workers & Pages → Create → Import a repository** → pick `OpenTimbre`.
-2. Settings:
-   - Build command: `npm run build`
-   - Deploy command: `npx wrangler deploy` (uses `wrangler.jsonc`)
-   - Root directory: `/`
-3. Deploy. Then open **Settings → Variables and Secrets**:
-   - add **`BACKEND_URL`** = `https://api.example.com` (type: Text), and redeploy;
-   - for Google sign-in, add the **build** variable `VITE_GOOGLE_CLIENT_ID` under Settings → Build → Variables.
+   | Setting | Value |
+   |---|---|
+   | Production branch | `main` |
+   | Framework preset | None |
+   | Build command | `npm run build` |
+   | Build output directory | `dist` |
+   | Root directory | *(leave empty)* |
 
-From your machine, `npx wrangler login && npm run build && npx wrangler deploy` does the same thing.
+   Node 22 is picked up from `.nvmrc`.
+3. Under **Environment variables** (now, or later in **Settings → Variables and Secrets**), for both *Production* and *Preview*:
 
-> The error `WorkerResource.getWorkerResult: response missing default_environment.script` appeared because the repo had no `wrangler.jsonc` for this flow. It has one now. If a half-created Worker is left over from the failed attempt, delete it and import again.
+   | Variable | Value |
+   |---|---|
+   | `BACKEND_URL` | `https://api.example.com`, your API from step 1 |
+   | `VITE_GOOGLE_CLIENT_ID` | *(optional)* Google sign-in client id, read at build time |
 
-### Option B: classic Pages
+4. **Save and Deploy.** After you change a variable, redeploy (**Deployments → ⋯ → Retry deployment**), because variables only apply to new deployments.
 
-1. **Workers & Pages → Create → Pages → Connect to Git** (the "Looking to deploy Pages?" link) → `OpenTimbre`.
-2. Framework preset: none · Build command: `npm run build` · Output directory: `dist`.
-3. **Settings → Variables and Secrets**: `BACKEND_URL` = `https://api.example.com` (Production and Preview), plus `VITE_GOOGLE_CLIENT_ID` if used. Redeploy.
+What's in the repo for Pages:
 
-Pages runs `functions/api/[[path]].js` for `/api/*` and ignores `wrangler.jsonc`.
+- `functions/api/[[path]].js`: the `/api/*` proxy to `BACKEND_URL`.
+- `public/_headers`: security headers, plus long-lived caching for hashed `/assets/*`.
+- Unknown routes fall back to `index.html` automatically (Pages single-page-app mode), so you don't need a `_redirects` file.
+- There is deliberately **no** `wrangler.toml`/`wrangler.jsonc`, so all settings stay editable in the dashboard.
+
+**From your machine instead of Git** (direct upload):
+
+```bash
+npx wrangler login
+npm run pages:deploy          # builds and uploads dist/ + functions/ to the "opentimbre" project
+```
+
+Set `BACKEND_URL` in the dashboard afterwards, as above.
+
+**Test locally the way Pages runs it**, with the API on port 8000:
+
+```bash
+npm run build
+npm run pages:dev             # http://localhost:8788
+```
+
+> **About the earlier error.** `WorkerResource.getWorkerResult: response missing default_environment.script` means the project was created through the **Workers** "Import a repository" flow, not Pages. Delete that project and create it again through **Pages → Connect to Git** as described above.
 
 ## 3. Check it
 
@@ -98,4 +121,4 @@ Pages runs `functions/api/[[path]].js` for `/api/*` and ignores `wrangler.jsonc`
 
 ## Custom domain
 
-Add it under the Worker's **Settings → Domains & Routes** (or the Pages project's **Custom domains**), then update the GitHub/Google OAuth URLs to match.
+Add it under the Pages project's **Custom domains** tab, then update the GitHub/Google OAuth URLs to match.

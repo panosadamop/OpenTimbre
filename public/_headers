@@ -1,0 +1,10 @@
+# Cloudflare Pages response headers for static files (not applied to /api, which the backend answers).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), geolocation=(), microphone=(self)
+
+# Vite emits content-hashed file names, so these can be cached forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

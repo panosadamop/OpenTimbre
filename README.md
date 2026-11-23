@@ -85,4 +85,4 @@ The **Administration** tab manages users (create, edit, disable, reset password,
 OpenTimbre welcomes recordings, code, testing, translations and docs. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Deploy to Cloudflare
-Studio on Cloudflare Workers/Pages, API on any Docker host with a persistent disk. See [docs/DEPLOY-CLOUDFLARE.md](docs/DEPLOY-CLOUDFLARE.md). The project website lives in a separate repo: [opentimbre-web](https://github.com/panosadamop/opentimbre-web).
+Studio on Cloudflare Pages (build `npm run build`, output `dist`, variable `BACKEND_URL`), API on any Docker host with a persistent disk. See [docs/DEPLOY-CLOUDFLARE.md](docs/DEPLOY-CLOUDFLARE.md). The project website lives in a separate repo: [opentimbre-web](https://github.com/panosadamop/opentimbre-web).
