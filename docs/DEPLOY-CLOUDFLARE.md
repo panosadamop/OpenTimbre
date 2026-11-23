@@ -20,7 +20,7 @@ Without the API, the Studio still loads, but the login screen cannot sign anyone
 
 ## 1. Host the API
 
-Any host that runs a Docker container **with a persistent disk** works: a VPS, your Virtualmin server, Fly.io, Railway, Render (paid tier, for disks), etc.
+On a Virtualmin/cPanel-style server without Docker, follow [DEPLOY-VIRTUALMIN.md](DEPLOY-VIRTUALMIN.md). Otherwise, any host that runs a Docker container **with a persistent disk** works: a VPS, your Virtualmin server, Fly.io, Railway, Render (paid tier, for disks), etc.
 
 ```bash
 docker build -t opentimbre-api services/ai
@@ -56,7 +56,7 @@ Allow uploads of at least **50 MB** in the reverse proxy (the Studio accepts rec
 **Create the first superadmin** inside the container:
 
 ```bash
-docker exec -it opentimbre-api python create_superadmin.py
+docker exec -it -e ADMIN_EMAIL=you@example.com opentimbre-api python create_superadmin.py
 ```
 
 Check that the API responds: `curl https://api.example.com/api/auth/me` should return `401`.
