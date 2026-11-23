@@ -80,3 +80,6 @@ Authenticated API `POST /api/v1/recordings/analyze` inspects PCM WAV pitch and r
 ## User & role management / Διαχείριση χρηστών & ρόλων
 
 The **Administration** tab manages users (create, edit, disable, reset password, sign out everywhere, delete), custom roles with fine-grained permissions, and an activity log. Permissions are enforced by the API. See [EN](docs/USER-MANAGEMENT-EN.md) / [EL](docs/USER-MANAGEMENT-EL.md).
+
+## Contributing
+OpenTimbre welcomes recordings, code, testing, translations and docs. See [CONTRIBUTING.md](CONTRIBUTING.md).
